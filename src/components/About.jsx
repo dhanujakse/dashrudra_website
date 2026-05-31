@@ -1,16 +1,14 @@
-import { Info } from 'lucide-react';
-
 const About = () => {
   return (
     <section id="about" className="about section-padding">
       <div className="container">
-        <h2 className="section-title">About Us</h2>
+        <h2 className="section-title">Who We Are</h2>
         <div className="about-content animate-fade-in">
           <p className="about-text">
-            We are third-year engineering students from <strong className="text-gold">SRM Madurai College for Engineering and Technology</strong>, specializing in <strong className="text-gold">Cyber Security</strong>. 
+            We are third-year <strong className="text-gold">Cybersecurity Engineering</strong> students from <strong className="text-gold">SRM Madurai College for Engineering and Technology</strong>.
           </p>
           <p className="about-text">
-            We develop practical digital solutions that solve real institutional challenges. Driven by our experience, we have built and implemented a Hall Arrangement System based on actual college workflows.
+            Combining our deep background in locking down systems with practical AI workflow pipelines, we build custom, leak-proof software solutions. We help local Tamil Nadu MSMEs, clinics, and businesses replace manual administrative bottlenecks with secure, highly-efficient automation.
           </p>
         </div>
       </div>

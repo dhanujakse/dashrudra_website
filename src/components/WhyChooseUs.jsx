@@ -2,30 +2,30 @@ const WhyChooseUs = () => {
   const reasons = [
     {
       num: "01",
-      title: "Real Implementation",
-      desc: "Our solutions are born from solving real institutional challenges."
+      title: "Bespoke & Unlimited",
+      desc: "We do not sell pre-made templates. We recognize your specific problems, write a custom case study, and engineer unique automation built around your exact workflows."
     },
     {
       num: "02",
-      title: "Simple & Reliable",
-      desc: "No steep learning curves; robust architectures with 99% uptime."
+      title: "Assistance Always",
+      desc: "We don't hand over code and disappear. We are your dedicated automation team, providing active support, maintenance, and developer assistance indefinitely."
     },
     {
       num: "03",
-      title: "Cost-Effective",
-      desc: "High-end institutional-grade software at accessible prices."
+      title: "Cyber-Secure Standards",
+      desc: "Leveraging our cybersecurity degree credentials, we lock down spreadsheets, isolate active webhooks, and heavily encrypt database layers to prevent data leaks."
     },
     {
       num: "04",
-      title: "Direct Support",
-      desc: "Get immediate help straight from the developers who wrote the code."
+      title: "Local Physical Support",
+      desc: "Based in Madurai, we offer direct on-site assistance. We visit your schools, clinics, or MSMEs physically to map processes and train your staff face-to-face."
     }
   ];
 
   return (
     <section id="why-us" className="why-choose-us section-padding">
       <div className="container">
-        <h2 className="section-title">Why Institutions Trust Us</h2>
+        <h2 className="section-title">Why Businesses Trust DashRudra</h2>
         
         <div className="why-grid">
           {reasons.map((reason, index) => (

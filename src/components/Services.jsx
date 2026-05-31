@@ -1,50 +1,53 @@
 import { 
-  Building2, 
-  Users, 
-  CalendarCheck, 
+  FileSearch, 
+  ClipboardList, 
   Cpu, 
-  Globe, 
-  DatabaseBackup 
+  ShieldCheck, 
+  HeartHandshake, 
+  Network 
 } from 'lucide-react';
 
 const Services = () => {
   const services = [
     {
-      icon: <Building2 size={40} />,
-      title: "Exam & Hall Management",
-      desc: "Smart seating and invigilation systems tailored to institutional workflows."
+      icon: <FileSearch size={40} />,
+      title: "1. Recognizing the Problem",
+      desc: "We visit your facility to deep-dive into your registers, spreadsheet logs, and daily tasks. We identify exactly where time is lost and where your data is vulnerable to leaks."
     },
     {
-      icon: <Users size={40} />,
-      title: "Student Record Management",
-      desc: "Centralized, secure digital vaults to handle academic, personal, and fee records."
-    },
-    {
-      icon: <CalendarCheck size={40} />,
-      title: "Attendance Tracking",
-      desc: "Automated logging modules connecting effortlessly with administrative portals."
+      icon: <ClipboardList size={40} />,
+      title: "2. Thorough Case Study",
+      desc: "We construct a comprehensive operational blueprint. We map out your custom automated flow pathways, database targets, and security protocols before writing a line of code."
     },
     {
       icon: <Cpu size={40} />,
-      title: "Administrative Automation",
-      desc: "Cut routine paperwork down to zero with smart scripts and custom software."
+      title: "3. Bespoke Custom Engineering",
+      desc: "Our services are unlimited. We build exactly what you need, whether it is a WhatsApp enquiry bot, clinic roster, hospital intake log, or staff attendance registry."
     },
     {
-      icon: <Globe size={40} />,
-      title: "Institutional Websites & Portals",
-      desc: "Modern and interactive platforms for student and faculty collaboration."
+      icon: <ShieldCheck size={40} />,
+      title: "4. Cybersecurity Hardening",
+      desc: "Leveraging our cybersecurity background, every pipeline is fully encrypted, sandbox-isolated, and heavily protected from external exposures or internal data leaks."
     },
     {
-      icon: <DatabaseBackup size={40} />,
-      title: "Secure Digital Records",
-      desc: "Enterprise-grade robust security protocols ensuring safe data migrations and backups."
+      icon: <HeartHandshake size={40} />,
+      title: "5. Lifelong Active Assistance",
+      desc: "We don't just deploy and disappear. We stand by our clients, providing active server audits, prompt tuning, threat monitoring, and dedicated developer assistance always."
+    },
+    {
+      icon: <Network size={40} />,
+      title: "6. Unlimited Scale Capabilities",
+      desc: "We connect local retail drawers to complex multi-branch databases. No matter how custom your spreadsheets or operational procedures are, we automate them."
     }
   ];
 
   return (
     <section id="services" className="services section-padding" style={{ backgroundColor: '#0B1F3A' }}>
       <div className="container">
-        <h2 className="section-title">What We Offer</h2>
+        <h2 className="section-title">Bespoke Automation & Security Services</h2>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto 4rem', lineHeight: '1.6' }}>
+          We are not a template vendor. We recognize your unique operations, write a comprehensive custom case study, build secure workflow systems tailored to you, and provide active support indefinitely.
+        </p>
         
         <div className="services-grid">
           {services.map((svc, index) => (

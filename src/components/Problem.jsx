@@ -1,35 +1,35 @@
-import { Clock, AlertTriangle, ListX, Workflow } from 'lucide-react';
+import { FileSpreadsheet, Hourglass, Network, ShieldX } from 'lucide-react';
 
 const Problem = () => {
   const problems = [
     {
-      icon: <Clock size={32} />,
-      title: "Time-Consuming",
-      desc: "Creating exam arrangements and managing student records takes hours of repetitive work."
+      icon: <FileSpreadsheet size={32} />,
+      title: "Excel & Spreadsheet Reliance",
+      desc: "Schools, hospitals, and traders still rely on manual Excel registers and static sheets to track sensitive files, leading to human errors and scheduling leaks."
     },
     {
-      icon: <AlertTriangle size={32} />,
-      title: "Error-Prone",
-      desc: "Manual entry increases the likelihood of human error, leading to conflicts during execution."
+      icon: <Hourglass size={32} />,
+      title: "Manual Overhead Drain",
+      desc: "Valuable hours are wasted daily on manual booking check-ins, writing paper invoices, and sending passive payment follow-ups that get ignored."
     },
     {
-      icon: <ListX size={32} />,
-      title: "Difficult to Manage",
-      desc: "Relying on physical paper-based systems or scattered spreadsheets makes administration a nightmare."
+      icon: <Network size={32} />,
+      title: "No Automated Workflows",
+      desc: "Operations depend on chaotic, loose papers and unstructured WhatsApp chat groups instead of modern, secure, and auto-triggered software pipelines."
     },
     {
-      icon: <Workflow size={32} />,
-      title: "Inefficient Workflows",
-      desc: "Lack of integration slows down institutional processes from attendance to grading."
+      icon: <ShieldX size={32} />,
+      title: "Critical Security Exposures",
+      desc: "Patient logs, student registries, and financial transactions are kept in open databases and unprotected spreadsheets, leaving the data fully exposed to leaks."
     }
   ];
 
   return (
     <section id="problem" className="problem section-padding">
       <div className="container">
-        <h2 className="section-title">The Problem We Solve</h2>
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto 2rem' }}>
-          Many institutions still depend on manual processes for exams, records, and administration.
+        <h2 className="section-title">The Operational Gaps We Solve</h2>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto 2rem', lineHeight: '1.6' }}>
+          We have found that many educational institutions, hospitals, and medium-sized businesses rely on basic, static spreadsheets rather than automation. They have not yet integrated secure, AI-powered workflows, resulting in severe operational friction and critical data exposures.
         </p>
         
         <div className="problem-grid">

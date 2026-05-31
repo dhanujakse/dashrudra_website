@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, ShieldCheck } from 'lucide-react';
+import { Menu, X, ShieldAlert } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -21,17 +21,22 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', href: '#home' },
     { name: 'About', href: '#about' },
+    { name: 'Problem', href: '#problem' },
     { name: 'Solution', href: '#solution' },
     { name: 'Services', href: '#services' },
+    { name: 'Why Us', href: '#why-us' },
     { name: 'Contact', href: '#contact' },
   ];
 
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="container nav-container">
-        <a href="#home" className="brand-logo">
-          <ShieldCheck className="text-gold" size={32} />
-          <span className="brand-font">DashRudhra</span>
+        <a href="#home" className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <ShieldAlert className="text-gold" size={32} style={{ flexShrink: 0 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.15', alignItems: 'flex-start' }}>
+            <span className="brand-font" style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--text-light)', letterSpacing: '0.5px' }}>DashRudra</span>
+            <span style={{ color: 'var(--primary-gold)', fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.75px', textTransform: 'uppercase' }}>Secure AI Automation</span>
+          </div>
         </a>
 
         <button className="mobile-menu-btn" onClick={toggleMenu}>
