@@ -1,4 +1,4 @@
-import { ShieldAlert } from 'lucide-react';
+
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -6,11 +6,11 @@ const Footer = () => {
   return (
     <footer className="footer">
       <div className="container">
-        <a href="#home" className="footer-logo" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', textDecoration: 'none' }}>
-          <ShieldAlert className="text-gold" size={24} style={{ flexShrink: 0 }} />
+        <a href="#home" className="footer-logo" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '1rem', textDecoration: 'none' }}>
+          <img src="/logo-star.png" alt="DashRudra Logo" style={{ height: '38px', width: 'auto', display: 'block', borderRadius: '4px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.15', alignItems: 'flex-start' }}>
-            <span className="brand-font" style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)', letterSpacing: '0.5px' }}>DashRudra</span>
-            <span style={{ color: 'var(--primary-gold)', fontSize: '0.62rem', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Secure AI Automation</span>
+            <span className="brand-font" style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--text-light)', letterSpacing: '0.5px' }}>DashRudra</span>
+            <span style={{ color: 'var(--primary-gold)', fontSize: '0.68rem', fontWeight: '600', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Consultancy</span>
           </div>
         </a>
         <p className="footer-text">

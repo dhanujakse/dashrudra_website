@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, ShieldAlert } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -31,11 +31,11 @@ const Navbar = () => {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="container nav-container">
-        <a href="#home" className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ShieldAlert className="text-gold" size={32} style={{ flexShrink: 0 }} />
+        <a href="#home" className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+          <img src="/logo-star.png" alt="DashRudra Logo" style={{ height: '44px', width: 'auto', display: 'block', borderRadius: '4px' }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.15', alignItems: 'flex-start' }}>
             <span className="brand-font" style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--text-light)', letterSpacing: '0.5px' }}>DashRudra</span>
-            <span style={{ color: 'var(--primary-gold)', fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.75px', textTransform: 'uppercase' }}>Secure AI Automation</span>
+            <span style={{ color: 'var(--primary-gold)', fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.75px', textTransform: 'uppercase' }}>Consultancy</span>
           </div>
         </a>
 

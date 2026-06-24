@@ -123,7 +123,7 @@ const Contact = () => {
 
       // Background Fallback 2: Express Backend Server
       try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
         await fetch(`${backendUrl}/api/send-email`, {
           method: 'POST',
           headers: {
