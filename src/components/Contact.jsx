@@ -88,19 +88,11 @@ const Contact = () => {
 
     setFormState('submitting');
 
-    // Programmatically submit the form to the hidden iframe.
-    // This completely bypasses CORS because standard HTML navigation submissions are never subjected to CORS preflight checks!
-    try {
-      if (formRef.current) {
-        formRef.current.submit();
-        console.log('Form successfully submitted to hidden iframe (bypassing CORS)');
-      }
-    } catch (err) {
-      console.warn('Programmatic form submission failed, attempting direct AJAX backup:', err);
-    }
-
-    // Fire secondary fallback channels in the background (EmailJS & Nodemailer Express server)
+    // Fire fallback channels and verify response
     (async () => {
+      let emailjsSuccess = false;
+      let backendSuccess = false;
+
       // Background Fallback 1: EmailJS
       try {
         const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
@@ -116,15 +108,16 @@ const Contact = () => {
           };
           await emailjs.send(serviceId, templateId, templateParams, publicKey);
           console.log('Secondary backup email sent using EmailJS');
+          emailjsSuccess = true;
         }
       } catch (emailJsError) {
         console.warn('EmailJS direct send omitted or failed:', emailJsError);
       }
 
-      // Background Fallback 2: Express Backend Server
+      // Background Fallback 2: Express Backend Server (Serverless Function)
       try {
         const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
-        await fetch(`${backendUrl}/api/send-email`, {
+        const response = await fetch(`${backendUrl}/api/send-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -137,14 +130,25 @@ const Contact = () => {
             message: formData.bottleneck
           })
         });
+        
+        if (response.ok) {
+          backendSuccess = true;
+          console.log('Nodemailer backend email sent successfully');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Nodemailer backend returned error status:', response.status, errorData);
+        }
       } catch (backendErr) {
-        console.warn('Express Backend background send omitted or failed:', backendErr);
+        console.error('Nodemailer backend fetch failed:', backendErr);
+      }
+
+      if (backendSuccess || emailjsSuccess) {
+        setFormState('success');
+      } else {
+        setFormState('idle');
+        alert('Failed to send request. Please try again or check console logs.');
       }
     })();
-
-    setTimeout(() => {
-      setFormState('success');
-    }, 1200);
   };
 
   return (
