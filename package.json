@@ -1,5 +1,5 @@
 {
-  "name": "consultation_website",
+  "name": "dashrudra-website",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,10 +14,13 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "gsap": "^3.15.1",
     "lucide-react": "^1.7.0",
     "nodemailer": "^8.0.4",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.18.7",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

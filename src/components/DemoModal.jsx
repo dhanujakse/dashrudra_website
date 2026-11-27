@@ -1,51 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Send, CheckCircle2, ChevronDown, AlertTriangle, ShieldCheck } from 'lucide-react';
-import emailjs from '@emailjs/browser';
+import { X, Send, CheckCircle2, ChevronDown, Compass, Sparkles } from 'lucide-react';
 
 const countries = [
   { name: 'India', flag: '🇮🇳', code: 'IN', dialCode: '+91', length: 10, placeholder: '98765 43210' },
   { name: 'United States', flag: '🇺🇸', code: 'US', dialCode: '+1', length: 10, placeholder: '201 555 0123' },
   { name: 'United Kingdom', flag: '🇬🇧', code: 'GB', dialCode: '+44', length: 10, placeholder: '7700 900077' },
   { name: 'United Arab Emirates', flag: '🇦🇪', code: 'AE', dialCode: '+971', length: 9, placeholder: '50 123 4567' },
-  { name: 'Saudi Arabia', flag: '🇸🇦', code: 'SA', dialCode: '+966', length: 9, placeholder: '50 123 4567' },
   { name: 'Singapore', flag: '🇸🇬', code: 'SG', dialCode: '+65', length: 8, placeholder: '8123 4567' },
   { name: 'Canada', flag: '🇨🇦', code: 'CA', dialCode: '+1', length: 10, placeholder: '613 555 0123' },
   { name: 'Australia', flag: '🇦🇺', code: 'AU', dialCode: '+61', length: 9, placeholder: '412 345 678' },
-  { name: 'Oman', flag: '🇴🇲', code: 'OM', dialCode: '+968', length: 8, placeholder: '9123 4567' },
-  { name: 'Qatar', flag: '🇶🇦', code: 'QA', dialCode: '+974', length: 8, placeholder: '5501 2345' },
-  { name: 'Kuwait', flag: '🇰🇼', code: 'KW', dialCode: '+965', length: 8, placeholder: '5123 4567' },
-  { name: 'Bahrain', flag: '🇧🇭', code: 'BH', dialCode: '+973', length: 8, placeholder: '3123 4567' },
   { name: 'Malaysia', flag: '🇲🇾', code: 'MY', dialCode: '+60', length: 9, placeholder: '12 345 6789' }
 ];
 
-const DemoModal = ({ isOpen, onClose }) => {
-  const formRef = useRef(null);
+const solutionOptions = [
+  "Workflow Automation",
+  "AI-Powered Business Tools",
+  "WhatsApp & Communication Automation",
+  "Custom Business Management System",
+  "Custom Web Application",
+  "AI Agents & Intelligent Workflows",
+  "Data Processing & Reporting Automation",
+  "Digital Transformation / Other"
+];
+
+const DemoModal = ({ isOpen, onClose, defaultSolution = '' }) => {
   const [formData, setFormData] = useState({
     name: '',
-    whatsapp: '',
-    solution: 'WhatsApp Enquiry Bot'
+    business: '',
+    email: '',
+    phone: '',
+    solution: defaultSolution || solutionOptions[0],
+    message: ''
   });
+
   const [rawPhone, setRawPhone] = useState('');
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  const [formState, setFormState] = useState('idle'); // idle, submitting, success
-  const [limitReached, setLimitReached] = useState(false);
+  const [formState, setFormState] = useState('idle'); // idle | submitting | success
 
-  // Check if user has already submitted a request today
   useEffect(() => {
-    if (isOpen) {
-      const today = new Date().toISOString().split('T')[0];
-      const lastRequestDate = localStorage.getItem('dashrudra_demo_request_date');
-      if (lastRequestDate === today) {
-        setLimitReached(true);
-      } else {
-        setLimitReached(false);
-      }
+    if (defaultSolution) {
+      setFormData(prev => ({ ...prev, solution: defaultSolution }));
     }
-  }, [isOpen]);
+  }, [defaultSolution]);
 
-  // Click outside to close dropdown
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (showCountryDropdown && !e.target.closest('.modal-country-select')) {
@@ -64,261 +62,272 @@ const DemoModal = ({ isOpen, onClose }) => {
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    const digits = value.replace(/\D/g, '');
-    const truncated = digits.slice(0, selectedCountry.length);
-    setRawPhone(truncated);
+    const digits = e.target.value.replace(/\D/g, '').slice(0, selectedCountry.length);
+    setRawPhone(digits);
     setFormData(prev => ({
       ...prev,
-      whatsapp: truncated ? `${selectedCountry.dialCode} ${truncated}` : ''
+      phone: digits ? `${selectedCountry.dialCode} ${digits}` : ''
     }));
   };
 
-  const handleCountrySelect = (country) => {
-    setSelectedCountry(country);
+  const handleCountrySelect = (c) => {
+    setSelectedCountry(c);
     setShowCountryDropdown(false);
-    const truncated = rawPhone.slice(0, country.length);
-    setRawPhone(truncated);
+    const digits = rawPhone.slice(0, c.length);
+    setRawPhone(digits);
     setFormData(prev => ({
       ...prev,
-      whatsapp: truncated ? `${country.dialCode} ${truncated}` : ''
+      phone: digits ? `${c.dialCode} ${digits}` : ''
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (rawPhone.length !== selectedCountry.length) {
-      alert(`Please enter a valid ${selectedCountry.length}-digit WhatsApp number for ${selectedCountry.name}.`);
+
+    if (!formData.name.trim() || !formData.email.trim()) {
+      alert('Please enter your name and email.');
       return;
     }
 
     setFormState('submitting');
 
-    // Programmatically submit the form to the hidden iframe.
-    // This completely bypasses CORS!
     try {
-      if (formRef.current) {
-        formRef.current.submit();
-        console.log('Demo request successfully submitted to hidden iframe (bypassing CORS)');
-      }
+      await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          institution: formData.business,
+          email: formData.email,
+          mobile: formData.phone,
+          message: `Interactive Demo Request for: ${formData.solution}\n\nNote: ${formData.message}`
+        })
+      });
     } catch (err) {
-      console.warn('Programmatic form submission failed, attempting direct AJAX backup:', err);
+      console.warn('API send failed, proceeding with fallback', err);
     }
 
-    // Fire secondary fallback channels in the background asynchronously
-    (async () => {
-      // EmailJS Fallback
-      try {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (serviceId && templateId && publicKey) {
-          await emailjs.send(serviceId, templateId, {
-            name: formData.name,
-            whatsapp: formData.whatsapp,
-            bottleneck: `[10-Min Demo Request] Target solution: ${formData.solution}`,
-            to_email: 'dashrudratechorg@gmail.com'
-          }, publicKey);
-          console.log('Secondary backup demo request sent using EmailJS');
-        }
-      } catch (emailJsError) {
-        console.warn('EmailJS fallback failed:', emailJsError);
-      }
-    })();
-
-    // Record submission date to block repeat requests today
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem('dashrudra_demo_request_date', today);
-
-    setTimeout(() => {
-      setFormState('success');
-    }, 1200);
+    setFormState('success');
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      background: 'rgba(5, 15, 28, 0.85)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 10000,
-      padding: '1.5rem',
-      animation: 'fadeIn 0.3s ease'
-    }}>
-      {/* Modal Glass Container */}
-      <div 
-        className="glass-card" 
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 99999,
+        background: 'rgba(5, 11, 22, 0.85)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
+      }}
+      onClick={onClose}
+    >
+      <div
+        className="glass-panel"
         style={{
           width: '100%',
-          maxWidth: '520px',
-          background: 'rgba(11, 31, 58, 0.95)',
-          border: '1px solid var(--primary-gold)',
-          borderRadius: '12px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.7)',
-          padding: '2.5rem 2rem',
+          maxWidth: '560px',
+          background: 'rgba(7, 19, 38, 0.95)',
+          border: '1px solid rgba(49, 139, 255, 0.4)',
+          borderRadius: '24px',
+          padding: '2.5rem',
           position: 'relative',
-          overflow: 'visible'
+          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8)',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
           style={{
             position: 'absolute',
             top: '1.25rem',
             right: '1.25rem',
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--text-light)',
-            opacity: 0.7,
+            background: 'rgba(16, 38, 74, 0.6)',
+            border: '1px solid var(--border-silver)',
+            color: 'var(--pearl-white)',
+            borderRadius: '50%',
+            width: '36px',
+            height: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             cursor: 'pointer',
-            padding: '4px'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = 0.7}
+          aria-label="Close modal"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        {/* Limit Reached Notice */}
-        {limitReached ? (
-          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.2rem', padding: '1rem 0' }}>
-            <div style={{ color: 'var(--primary-gold)', background: 'rgba(212, 175, 55, 0.1)', padding: '1rem', borderRadius: '50%' }}>
-              <AlertTriangle size={48} />
+        {formState === 'success' ? (
+          <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: 'rgba(74, 222, 128, 0.15)',
+                border: '2px solid #4ADE80',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#4ADE80',
+                margin: '0 auto 1.25rem auto',
+              }}
+            >
+              <CheckCircle2 size={34} />
             </div>
-            <h3 className="brand-font text-gold" style={{ fontSize: '1.5rem', margin: 0 }}>Daily Request Limit Reached</h3>
-            <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
-              You or your company have already requested a custom 10-Min Live Demo today. To ensure dedicated engineering focus and highly-customized system previews, we limit demo requests to <strong style={{ color: 'inherit', fontWeight: '600' }}>one request per business per day</strong>.
+
+            <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--pearl-white)', marginBottom: '0.75rem' }}>
+              Request Received
+            </h3>
+
+            <p style={{ color: 'var(--metallic-silver)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+              Thank you for connecting with DASHRUDRA. Our team will contact you shortly to review your requirements.
             </p>
-            <p style={{ color: 'var(--primary-gold)', fontSize: '0.9rem', fontWeight: '500' }}>
-              Our engineering team is already processing your request. We will reach out to you via your submitted WhatsApp number shortly.
-            </p>
-            <button onClick={onClose} className="btn btn-outline" style={{ marginTop: '1rem', width: '100%' }}>
-              Close
+
+            <button onClick={onClose} className="btn btn-primary" style={{ width: '100%' }}>
+              Close Window
             </button>
           </div>
         ) : (
-          <>
-            {formState === 'idle' && (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
-                  <ShieldCheck className="text-gold" size={36} style={{ marginBottom: '0.5rem' }} />
-                  <h3 className="brand-font text-gold" style={{ fontSize: '1.6rem', margin: 0 }}>Book Custom 10-Min Live Demo</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                    Limit: One demo request per business per day.
-                  </p>
-                </div>
+          <div>
+            {/* Modal Header */}
+            <div style={{ marginBottom: '1.75rem' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.74rem',
+                  fontWeight: '700',
+                  color: 'var(--electric-blue)',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                <Compass size={14} />
+                <span>DASHRUDRA &bull; Direct Consultation</span>
+              </div>
 
-                {/* Business Name */}
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" htmlFor="modal-name">Your Name / Business Identity</label>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--pearl-white)', marginBottom: '0.35rem' }}>
+                Let's Work Together
+              </h3>
+
+              <p style={{ color: 'var(--slate)', fontSize: '0.9rem' }}>
+                Tell us about your operations and discover how our solutions eliminate repetitive manual friction.
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--metallic-silver)', marginBottom: '4px' }}>
+                    Full Name *
+                  </label>
                   <input
                     type="text"
-                    id="modal-name"
                     name="name"
+                    required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="e.g. Ramesh Traders / Salem Dental Clinic"
-                    required
+                    placeholder="e.g. Anand Sharma"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(5, 11, 22, 0.7)',
+                      border: '1px solid rgba(198, 206, 216, 0.2)',
+                      color: 'var(--pearl-white)',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                    }}
                   />
                 </div>
 
-                {/* Target Solution Dropdown */}
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" htmlFor="modal-solution">Main Solution You Want to Preview</label>
-                  <select
-                    id="modal-solution"
-                    name="solution"
-                    value={formData.solution}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    style={{ background: 'rgba(11, 31, 58, 0.9)', color: 'var(--text-light)', border: '1px solid rgba(255,255,255,0.1)' }}
-                    required
-                  >
-                    <option value="WhatsApp Enquiry Bot">WhatsApp Enquiry Bot</option>
-                    <option value="Exam Seating arrangement (Hall Harmony)">Exam Seating Hall Arrangement</option>
-                    <option value="Clinic Roster System">Clinic Roster System</option>
-                    <option value="Hospital Intake logs">Hospital Intake Logs</option>
-                    <option value="Staff Attendance Registry">Staff Attendance Registry</option>
-                    <option value="Secure Invoice Pipelines">Secure Invoicing Pipeline</option>
-                    <option value="Other Custom Automation">Other Bespoke Automation</option>
-                  </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--metallic-silver)', marginBottom: '4px' }}>
+                      Business / Organization
+                    </label>
+                    <input
+                      type="text"
+                      name="business"
+                      value={formData.business}
+                      onChange={handleInputChange}
+                      placeholder="Company name"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '8px',
+                        background: 'rgba(5, 11, 22, 0.7)',
+                        border: '1px solid rgba(198, 206, 216, 0.2)',
+                        color: 'var(--pearl-white)',
+                        fontSize: '0.9rem',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--metallic-silver)', marginBottom: '4px' }}>
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="name@company.com"
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '8px',
+                        background: 'rgba(5, 11, 22, 0.7)',
+                        border: '1px solid rgba(198, 206, 216, 0.2)',
+                        color: 'var(--pearl-white)',
+                        fontSize: '0.9rem',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
                 </div>
 
-                {/* WhatsApp Selector */}
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" htmlFor="modal-whatsapp">WhatsApp Number</label>
-                  <div 
-                    className="modal-country-select"
-                    style={{ 
-                      display: 'flex', 
-                      position: 'relative', 
-                      background: 'rgba(11, 31, 58, 0.8)', 
-                      border: isFocused ? '1px solid var(--primary-gold)' : '1px solid rgba(255, 255, 255, 0.1)', 
-                      borderRadius: '8px', 
-                      alignItems: 'center',
-                      boxShadow: isFocused ? '0 0 0 2px rgba(212, 175, 55, 0.2)' : 'none',
-                      transition: 'all 0.3s ease',
-                      width: '100%'
-                    }}
-                  >
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--metallic-silver)', marginBottom: '4px' }}>
+                    Phone / WhatsApp Number
+                  </label>
+                  <div style={{ display: 'flex', gap: '6px', position: 'relative' }} className="modal-country-select">
                     <button
                       type="button"
                       onClick={() => setShowCountryDropdown(!showCountryDropdown)}
                       style={{
+                        padding: '0.75rem 0.8rem',
+                        borderRadius: '8px',
+                        background: 'rgba(5, 11, 22, 0.7)',
+                        border: '1px solid rgba(198, 206, 216, 0.2)',
+                        color: 'var(--pearl-white)',
+                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--text-light)',
-                        padding: '0 0.75rem',
-                        height: '100%',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '0.95rem',
-                        fontWeight: '500',
-                        minWidth: '95px'
+                        gap: '4px',
+                        fontSize: '0.85rem',
                       }}
                     >
-                      <span style={{ fontSize: '1.1rem' }}>{selectedCountry.flag}</span>
+                      <span>{selectedCountry.flag}</span>
                       <span>{selectedCountry.dialCode}</span>
-                      <ChevronDown size={12} style={{ opacity: 0.7 }} />
+                      <ChevronDown size={14} />
                     </button>
-
-                    <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.15)' }}></div>
-
-                    <input
-                      type="tel"
-                      id="modal-whatsapp"
-                      name="whatsapp_raw"
-                      value={rawPhone}
-                      onChange={handlePhoneChange}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      style={{
-                        flexGrow: 1,
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'var(--text-light)',
-                        padding: '0.85rem 0.75rem',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '0.95rem',
-                        width: '100%'
-                      }}
-                      placeholder={selectedCountry.placeholder}
-                      required
-                    />
 
                     {showCountryDropdown && (
                       <div
@@ -326,16 +335,14 @@ const DemoModal = ({ isOpen, onClose }) => {
                           position: 'absolute',
                           top: '105%',
                           left: 0,
-                          width: '260px',
-                          background: 'rgba(11, 31, 58, 0.98)',
-                          border: '1px solid var(--primary-gold)',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
+                          width: '240px',
                           maxHeight: '180px',
                           overflowY: 'auto',
-                          zIndex: 10000,
-                          padding: '4px 0',
-                          backdropFilter: 'blur(10px)'
+                          background: 'rgba(5, 11, 22, 0.98)',
+                          border: '1px solid rgba(198, 206, 216, 0.25)',
+                          borderRadius: '8px',
+                          zIndex: 50,
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
                         }}
                       >
                         {countries.map((c) => (
@@ -343,73 +350,106 @@ const DemoModal = ({ isOpen, onClose }) => {
                             key={c.code}
                             onClick={() => handleCountrySelect(c)}
                             style={{
+                              padding: '0.5rem 0.8rem',
+                              cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              padding: '8px 12px',
-                              cursor: 'pointer',
-                              color: 'var(--text-light)',
-                              fontFamily: 'Inter, sans-serif',
                               fontSize: '0.85rem',
-                              background: selectedCountry.code === c.code ? 'rgba(212, 175, 55, 0.15)' : 'transparent'
+                              color: 'var(--pearl-white)',
+                              borderBottom: '1px solid rgba(198, 206, 216, 0.08)',
                             }}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <span>{c.flag}</span>
-                              <span>{c.name}</span>
-                            </div>
-                            <span style={{ color: 'var(--primary-gold)' }}>{c.dialCode}</span>
+                            <span>{c.flag} {c.name}</span>
+                            <span style={{ color: 'var(--slate)', fontSize: '0.78rem' }}>{c.dialCode}</span>
                           </div>
                         ))}
                       </div>
                     )}
-                  </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontSize: '0.75rem', fontFamily: 'Inter, sans-serif' }}>
-                    {rawPhone.length < selectedCountry.length ? (
-                      <span style={{ color: 'var(--primary-gold)' }}>
-                        Enforced limit: {rawPhone.length} / {selectedCountry.length} digits
-                      </span>
-                    ) : (
-                      <span style={{ color: '#10B981' }}>
-                        ✓ Ready
-                      </span>
-                    )}
-                    <span style={{ color: 'var(--text-muted)' }}>
-                      Target: {selectedCountry.name}
-                    </span>
+                    <input
+                      type="tel"
+                      value={rawPhone}
+                      onChange={handlePhoneChange}
+                      placeholder={selectedCountry.placeholder}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '8px',
+                        background: 'rgba(5, 11, 22, 0.7)',
+                        border: '1px solid rgba(198, 206, 216, 0.2)',
+                        color: 'var(--pearl-white)',
+                        fontSize: '0.9rem',
+                        outline: 'none',
+                      }}
+                    />
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-primary submit-btn" style={{ margin: '0.5rem 0 0 0' }}>
-                  <Send size={16} />
-                  Book My Live Demo
-                </button>
-              </form>
-            )}
-
-            {formState === 'submitting' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '1rem' }}>
-                <div style={{ width: '40px', height: '40px', border: '3px solid rgba(212, 175, 55, 0.2)', borderTopColor: 'var(--primary-gold)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                <p style={{ color: 'var(--text-muted)', fontFamily: 'Poppins', fontSize: '1rem' }}>Scheduling your live session...</p>
-              </div>
-            )}
-
-            {formState === 'success' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: '1.2rem', minHeight: '300px' }}>
-                <div style={{ color: 'var(--primary-gold)', background: 'rgba(212, 175, 55, 0.1)', padding: '1rem', borderRadius: '50%' }}>
-                  <CheckCircle2 size={48} />
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--metallic-silver)', marginBottom: '4px' }}>
+                    Solution of Interest
+                  </label>
+                  <select
+                    name="solution"
+                    value={formData.solution}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(5, 11, 22, 0.9)',
+                      border: '1px solid rgba(198, 206, 216, 0.2)',
+                      color: 'var(--pearl-white)',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {solutionOptions.map((opt, idx) => (
+                      <option key={idx} value={opt} style={{ background: '#071326', color: '#FFFFFF' }}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <h3 className="brand-font text-gold" style={{ fontSize: '1.5rem', margin: 0 }}>Demo Request Scheduled!</h3>
-                <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                  Your live session request has been registered. Our team will ping your WhatsApp number <strong>{formData.whatsapp}</strong> within 2 hours to confirm your custom 10-Min Live Demo scheduling!
-                </p>
-                <button onClick={onClose} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
-                  Done
-                </button>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--metallic-silver)', marginBottom: '4px' }}>
+                    Brief Note on Your Challenge (Optional)
+                  </label>
+                  <textarea
+                    name="message"
+                    rows={3}
+                    value={formData.message}
+                    onChange={handleInputChange}
+                    placeholder="What manual task would you like to eliminate?"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(5, 11, 22, 0.7)',
+                      border: '1px solid rgba(198, 206, 216, 0.2)',
+                      color: 'var(--pearl-white)',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                      fontFamily: 'inherit',
+                      resize: 'none',
+                    }}
+                  />
+                </div>
               </div>
-            )}
-          </>
+
+              <button
+                type="submit"
+                disabled={formState === 'submitting'}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '0.85rem', fontSize: '0.95rem' }}
+              >
+                {formState === 'submitting' ? 'Submitting Request...' : 'Send Request'}
+              </button>
+            </form>
+          </div>
         )}
       </div>
     </div>

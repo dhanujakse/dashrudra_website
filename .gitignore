@@ -25,3 +25,5 @@ dist-ssr
 .env
 **/.env
 backend/node_modules
+*-jpg-frames/
+WhatsApp Image*

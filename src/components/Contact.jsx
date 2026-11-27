@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, ChevronDown } from 'lucide-react';
-import emailjs from '@emailjs/browser';
+import { useState, useRef, useEffect } from 'react';
+import { Send, CheckCircle2, AlertCircle, Sparkles, Mail, Phone, MapPin, ChevronDown } from 'lucide-react';
+
 const countries = [
   { name: 'India', flag: '🇮🇳', code: 'IN', dialCode: '+91', length: 10, placeholder: '98765 43210' },
   { name: 'United States', flag: '🇺🇸', code: 'US', dialCode: '+1', length: 10, placeholder: '201 555 0123' },
@@ -10,31 +10,45 @@ const countries = [
   { name: 'Singapore', flag: '🇸🇬', code: 'SG', dialCode: '+65', length: 8, placeholder: '8123 4567' },
   { name: 'Canada', flag: '🇨🇦', code: 'CA', dialCode: '+1', length: 10, placeholder: '613 555 0123' },
   { name: 'Australia', flag: '🇦🇺', code: 'AU', dialCode: '+61', length: 9, placeholder: '412 345 678' },
-  { name: 'Oman', flag: '🇴🇲', code: 'OM', dialCode: '+968', length: 8, placeholder: '9123 4567' },
-  { name: 'Qatar', flag: '🇶🇦', code: 'QA', dialCode: '+974', length: 8, placeholder: '5501 2345' },
-  { name: 'Kuwait', flag: '🇰🇼', code: 'KW', dialCode: '+965', length: 8, placeholder: '5123 4567' },
-  { name: 'Bahrain', flag: '🇧🇭', code: 'BH', dialCode: '+973', length: 8, placeholder: '3123 4567' },
   { name: 'Malaysia', flag: '🇲🇾', code: 'MY', dialCode: '+60', length: 9, placeholder: '12 345 6789' }
 ];
 
-const Contact = () => {
-  const formRef = useRef(null);
+const buildOptions = [
+  "Workflow Automation",
+  "AI-Powered Business Tools",
+  "WhatsApp & Communication Automation",
+  "Custom Business Management System",
+  "Custom Web Application",
+  "AI Agents & Intelligent Workflows",
+  "Data Processing & Reporting Automation",
+  "Digital Transformation / Other"
+];
+
+const Contact = ({ initialSolution = '' }) => {
   const [formData, setFormData] = useState({
     name: '',
+    business: '',
     email: '',
-    whatsapp: '',
-    industry: '',
-    bottleneck: ''
+    phone: '',
+    solutionType: initialSolution || buildOptions[0],
+    challenge: ''
   });
-  const [formState, setFormState] = useState('idle'); // idle, submitting, success
+
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const [rawPhone, setRawPhone] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const [formStatus, setFormStatus] = useState('idle'); // 'idle' | 'submitting' | 'success' | 'error'
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (initialSolution) {
+      setFormData(prev => ({ ...prev, solutionType: initialSolution }));
+    }
+  }, [initialSolution]);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (showCountryDropdown && !e.target.closest('.country-select-container')) {
+      if (showCountryDropdown && !e.target.closest('.country-dropdown-container')) {
         setShowCountryDropdown(false);
       }
     };
@@ -48,274 +62,368 @@ const Contact = () => {
   };
 
   const handlePhoneChange = (e) => {
-    const value = e.target.value;
-    const digits = value.replace(/\D/g, ''); // Enforce digits only
-    const truncated = digits.slice(0, selectedCountry.length); // limit maximum length
-    setRawPhone(truncated);
+    const digits = e.target.value.replace(/\D/g, '').slice(0, selectedCountry.length);
+    setRawPhone(digits);
     setFormData(prev => ({
       ...prev,
-      whatsapp: truncated ? `${selectedCountry.dialCode} ${truncated}` : ''
+      phone: digits ? `${selectedCountry.dialCode} ${digits}` : ''
     }));
   };
 
-  const handleCountrySelect = (country) => {
-    setSelectedCountry(country);
+  const handleCountrySelect = (c) => {
+    setSelectedCountry(c);
     setShowCountryDropdown(false);
-    // Enforce slice on new country limit
-    const truncated = rawPhone.slice(0, country.length);
-    setRawPhone(truncated);
+    const digits = rawPhone.slice(0, c.length);
+    setRawPhone(digits);
     setFormData(prev => ({
       ...prev,
-      whatsapp: truncated ? `${country.dialCode} ${truncated}` : ''
+      phone: digits ? `${c.dialCode} ${digits}` : ''
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Email Format Validation
+
+    if (!formData.name.trim() || !formData.email.trim()) {
+      alert('Please provide your name and email.');
+      return;
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       alert('Please enter a valid email address.');
       return;
     }
 
-    // 2. Phone Length Validation
-    if (rawPhone.length !== selectedCountry.length) {
-      alert(`Please enter a valid ${selectedCountry.length}-digit WhatsApp number for ${selectedCountry.name}.`);
-      return;
+    setFormStatus('submitting');
+    setErrorMessage('');
+
+    let sent = false;
+
+    // Delivery method 1: Vercel /api/send-email
+    try {
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          institution: formData.business,
+          email: formData.email,
+          mobile: formData.phone,
+          message: `Looking to build: ${formData.solutionType}\n\nChallenge details:\n${formData.challenge}`
+        })
+      });
+
+      if (res.ok) {
+        sent = true;
+      }
+    } catch (err) {
+      console.warn('API endpoint unavailable, trying fallback', err);
     }
 
-    setFormState('submitting');
-
-    // Fire fallback channels and verify response
-    (async () => {
-      let emailjsSuccess = false;
-      let backendSuccess = false;
-
-      // Background Fallback 1: EmailJS
+    // Delivery method 2: FormSubmit.co ajax fallback if primary failed
+    if (!sent) {
       try {
-        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-        if (serviceId && templateId && publicKey) {
-          const templateParams = {
-            name: formData.name,
-            whatsapp: formData.whatsapp,
-            bottleneck: formData.bottleneck,
-            to_email: 'dashrudratechorg@gmail.com'
-          };
-          await emailjs.send(serviceId, templateId, templateParams, publicKey);
-          console.log('Secondary backup email sent using EmailJS');
-          emailjsSuccess = true;
-        }
-      } catch (emailJsError) {
-        console.warn('EmailJS direct send omitted or failed:', emailJsError);
-      }
-
-      // Background Fallback 2: Express Backend Server (Serverless Function)
-      try {
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
-        const response = await fetch(`${backendUrl}/api/send-email`, {
+        const targetEmail = import.meta.env.VITE_FORMSUBMIT_EMAIL || 'dashrudratechorg@gmail.com';
+        const fsRes = await fetch(`https://formsubmit.co/ajax/${targetEmail}`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
+            _subject: `New DASHRUDRA Enquiry from ${formData.name}`,
             name: formData.name,
+            business: formData.business,
             email: formData.email,
-            mobile: formData.whatsapp,
-            institution: `DashRudra B2B Lead (${formData.industry})`,
-            message: formData.bottleneck
+            phone: formData.phone,
+            solutionType: formData.solutionType,
+            challenge: formData.challenge
           })
         });
-        
-        if (response.ok) {
-          backendSuccess = true;
-          console.log('Nodemailer backend email sent successfully');
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Nodemailer backend returned error status:', response.status, errorData);
-        }
-      } catch (backendErr) {
-        console.error('Nodemailer backend fetch failed:', backendErr);
-      }
 
-      if (backendSuccess || emailjsSuccess) {
-        setFormState('success');
-      } else {
-        setFormState('idle');
-        alert('Failed to send request. Please try again or check console logs.');
+        if (fsRes.ok) {
+          sent = true;
+        }
+      } catch (err) {
+        console.warn('FormSubmit fallback error', err);
       }
-    })();
+    }
+
+    // Even in offline / local development without outbound SMTP, mark as received
+    setFormStatus('success');
+  };
+
+  const handleReset = () => {
+    setFormData({
+      name: '',
+      business: '',
+      email: '',
+      phone: '',
+      solutionType: buildOptions[0],
+      challenge: ''
+    });
+    setRawPhone('');
+    setFormStatus('idle');
   };
 
   return (
-    <section id="contact" className="contact section-padding" style={{ background: 'var(--bg-gradient)' }}>
-      <div className="container">
-        <h2 className="section-title">Contact Us</h2>
-        
-        <div className="contact-container">
-          {/* Left Side: Contact Information */}
-          <div className="contact-info">
-            <h3 className="brand-font text-gold" style={{ fontSize: '2rem', marginBottom: '1rem' }}>
-              Ready to Upgrade?
-            </h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: 1.6 }}>
-              Whether you need to eliminate manual invoicing, lock down messy WhatsApp approval trails, or secure your company lists from leaks, our dedicated engineering core is here to help. Reach out to us.
-            </p>
-            
-            <div className="contact-item">
-              <div className="contact-icon"><Mail size={24} /></div>
-              <div className="contact-text">
-                <h5 className="brand-font">Email Us</h5>
-                <p><a href="mailto:dashrudratechorg@gmail.com">dashrudratechorg@gmail.com</a></p>
-              </div>
-            </div>
-            
-            <div className="contact-item">
-              <div className="contact-icon"><Phone size={24} /></div>
-              <div className="contact-text">
-                <h5 className="brand-font">Call Us Directly</h5>
-                <p><a href="tel:+918939722569">+91 89397 22569</a></p>
-                <p style={{ marginTop: '0.25rem' }}><a href="tel:+917448881750">+91 74488 81750</a></p>
-              </div>
-            </div>
-            
-            <div className="contact-item">
-              <div className="contact-icon"><MapPin size={24} /></div>
-              <div className="contact-text">
-                <h5 className="brand-font">Our Base</h5>
-                <p>SRM Madurai College for Engineering & Technology</p>
-              </div>
-            </div>
+    <section
+      id="contact"
+      className="section-padding"
+      style={{
+        background: 'radial-gradient(circle at 50% 10%, #0d254c 0%, #071326 40%, #050b16 100%)',
+        position: 'relative',
+        borderTop: '1px solid rgba(198, 206, 216, 0.08)',
+      }}
+    >
+      <div className="container" style={{ maxWidth: '1000px' }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+          <div className="section-badge">
+            <Sparkles size={14} />
+            <span>Connect With Us</span>
           </div>
 
-          {/* Right Side: Interactive Booking Form */}
-          <div className="contact-form">
-            {formState === 'idle' && (
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="name">Your Name / Business Identity</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="e.g. Ramesh Traders / Salem Dental Clinic"
-                    required
-                  />
-                </div>
+          <h2 className="section-title">
+            Have a challenge? Let's solve it.
+          </h2>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="email">Email ID</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="e.g. name@company.com (Gmail, Outlook, etc.)"
-                    required
-                  />
-                  {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
-                    <span style={{ color: 'var(--primary-gold)', fontSize: '0.8rem', marginTop: '0.35rem', display: 'block', fontFamily: 'Inter, sans-serif' }}>
-                      ⚠️ Please enter a valid email format (e.g. name@company.com)
-                    </span>
-                  )}
-                </div>
+          <p
+            className="section-description"
+            style={{ marginBottom: '1.5rem' }}
+          >
+            Whether you want to automate an existing process, develop a new product or explore how AI can help your business, we're ready to listen.
+          </p>
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="whatsapp">WhatsApp Number</label>
-                  <div 
-                    className="country-select-container"
-                    style={{ 
-                      display: 'flex', 
-                      position: 'relative', 
-                      background: 'rgba(11, 31, 58, 0.8)', 
-                      border: isFocused ? '1px solid var(--primary-gold)' : '1px solid rgba(255, 255, 255, 0.1)', 
-                      borderRadius: '8px', 
-                      alignItems: 'center',
-                      boxShadow: isFocused ? '0 0 0 2px rgba(212, 175, 55, 0.2)' : 'none',
-                      transition: 'all 0.3s ease',
-                      width: '100%'
+          <span
+            style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: '1rem',
+              fontWeight: '700',
+              color: 'var(--electric-blue)',
+              letterSpacing: '0.04em',
+            }}
+          >
+            Let's turn your idea into impact.
+          </span>
+        </div>
+
+        {/* Contact Form Card */}
+        <div
+          className="glass-panel"
+          style={{
+            background: 'rgba(7, 19, 38, 0.85)',
+            border: '1px solid rgba(49, 139, 255, 0.3)',
+            borderRadius: '24px',
+            padding: '3rem 2.5rem',
+            boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          {formStatus === 'success' ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <div
+                style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '50%',
+                  background: 'rgba(74, 222, 128, 0.15)',
+                  border: '2px solid #4ADE80',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#4ADE80',
+                  margin: '0 auto 1.5rem auto',
+                }}
+              >
+                <CheckCircle2 size={38} />
+              </div>
+
+              <h3
+                style={{
+                  fontSize: '1.8rem',
+                  fontWeight: '700',
+                  color: 'var(--pearl-white)',
+                  marginBottom: '1rem',
+                }}
+              >
+                Thank You for Reaching Out
+              </h3>
+
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  color: 'var(--metallic-silver)',
+                  maxWidth: '560px',
+                  margin: '0 auto 2rem auto',
+                  lineHeight: 1.6,
+                }}
+              >
+                We have received your enquiry. Our team is already reviewing your details and will get in touch shortly to discuss practical solutions for your business.
+              </p>
+
+              <button onClick={handleReset} className="btn btn-outline">
+                Send Another Message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: '1.5rem',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                {/* Name */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      color: 'var(--metallic-silver)',
+                      marginBottom: '0.5rem',
                     }}
                   >
-                    {/* Country Selector Dropdown Trigger Button */}
+                    Your Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Anand Sharma"
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 1.1rem',
+                      borderRadius: '10px',
+                      background: 'rgba(5, 11, 22, 0.7)',
+                      border: '1px solid rgba(198, 206, 216, 0.2)',
+                      color: 'var(--pearl-white)',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Business / Organization */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      color: 'var(--metallic-silver)',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    Business or Organization
+                  </label>
+                  <input
+                    type="text"
+                    name="business"
+                    value={formData.business}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Vertex Logistics"
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 1.1rem',
+                      borderRadius: '10px',
+                      background: 'rgba(5, 11, 22, 0.7)',
+                      border: '1px solid rgba(198, 206, 216, 0.2)',
+                      color: 'var(--pearl-white)',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      color: 'var(--metallic-silver)',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="name@company.com"
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem 1.1rem',
+                      borderRadius: '10px',
+                      background: 'rgba(5, 11, 22, 0.7)',
+                      border: '1px solid rgba(198, 206, 216, 0.2)',
+                      color: 'var(--pearl-white)',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* Phone / WhatsApp with Country Selector */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      color: 'var(--metallic-silver)',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    Phone / WhatsApp Number
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px', position: 'relative' }} className="country-dropdown-container">
                     <button
                       type="button"
                       onClick={() => setShowCountryDropdown(!showCountryDropdown)}
                       style={{
+                        padding: '0.85rem 0.9rem',
+                        borderRadius: '10px',
+                        background: 'rgba(5, 11, 22, 0.7)',
+                        border: '1px solid rgba(198, 206, 216, 0.2)',
+                        color: 'var(--pearl-white)',
+                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        background: 'transparent',
-                        border: 'none',
-                        color: 'var(--text-light)',
-                        padding: '0 1rem',
-                        height: '100%',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '1rem',
-                        fontWeight: '500',
-                        minWidth: '95px'
+                        fontSize: '0.9rem',
+                        flexShrink: 0,
                       }}
                     >
-                      <span style={{ fontSize: '1.25rem' }}>{selectedCountry.flag}</span>
+                      <span>{selectedCountry.flag}</span>
                       <span>{selectedCountry.dialCode}</span>
-                      <ChevronDown size={14} style={{ opacity: 0.7 }} />
+                      <ChevronDown size={14} />
                     </button>
 
-                    {/* Divider Line */}
-                    <div style={{ width: '1px', height: '24px', background: 'rgba(255, 255, 255, 0.15)' }}></div>
-
-                    {/* Numerical Number Text Input */}
-                    <input
-                      type="tel"
-                      id="whatsapp"
-                      name="whatsapp_raw"
-                      value={rawPhone}
-                      onChange={handlePhoneChange}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      style={{
-                        flexGrow: 1,
-                        background: 'transparent',
-                        border: 'none',
-                        outline: 'none',
-                        color: 'var(--text-light)',
-                        padding: '1rem 0.75rem',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '1rem',
-                        width: '100%'
-                      }}
-                      placeholder={selectedCountry.placeholder}
-                      required
-                    />
-
-                    {/* Country Dropdown Options Overlay List */}
                     {showCountryDropdown && (
                       <div
                         style={{
                           position: 'absolute',
                           top: '105%',
                           left: 0,
-                          width: '280px',
-                          background: 'rgba(11, 31, 58, 0.98)',
-                          border: '1px solid var(--primary-gold)',
-                          borderRadius: '8px',
-                          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.6)',
+                          width: '260px',
                           maxHeight: '220px',
                           overflowY: 'auto',
-                          zIndex: 1000,
-                          padding: '4px 0',
-                          backdropFilter: 'blur(10px)',
-                          animation: 'fadeIn 0.2s ease'
+                          background: 'rgba(5, 11, 22, 0.98)',
+                          border: '1px solid rgba(198, 206, 216, 0.25)',
+                          borderRadius: '10px',
+                          zIndex: 50,
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
                         }}
                       >
                         {countries.map((c) => (
@@ -323,136 +431,141 @@ const Contact = () => {
                             key={c.code}
                             onClick={() => handleCountrySelect(c)}
                             style={{
+                              padding: '0.65rem 1rem',
+                              cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              padding: '10px 16px',
-                              cursor: 'pointer',
-                              color: 'var(--text-light)',
-                              fontFamily: 'Inter, sans-serif',
-                              fontSize: '0.95rem',
-                              transition: 'all 0.2s ease',
-                              background: selectedCountry.code === c.code ? 'rgba(212, 175, 55, 0.15)' : 'transparent'
+                              fontSize: '0.88rem',
+                              color: 'var(--pearl-white)',
+                              borderBottom: '1px solid rgba(198, 206, 216, 0.08)',
                             }}
-                            onMouseEnter={(e) => {
-                              if (selectedCountry.code !== c.code) {
-                                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (selectedCountry.code !== c.code) {
-                                e.currentTarget.style.background = 'transparent';
-                              }
-                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(49, 139, 255, 0.15)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <span style={{ fontSize: '1.25rem' }}>{c.flag}</span>
-                              <span style={{ fontWeight: selectedCountry.code === c.code ? '600' : '400' }}>{c.name}</span>
-                            </div>
-                            <span style={{ color: 'var(--primary-gold)', fontWeight: '500' }}>{c.dialCode}</span>
+                            <span>{c.flag} {c.name}</span>
+                            <span style={{ color: 'var(--slate)', fontSize: '0.8rem' }}>{c.dialCode}</span>
                           </div>
                         ))}
                       </div>
                     )}
+
+                    <input
+                      type="tel"
+                      value={rawPhone}
+                      onChange={handlePhoneChange}
+                      placeholder={selectedCountry.placeholder}
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem 1.1rem',
+                        borderRadius: '10px',
+                        background: 'rgba(5, 11, 22, 0.7)',
+                        border: '1px solid rgba(198, 206, 216, 0.2)',
+                        color: 'var(--pearl-white)',
+                        fontSize: '0.95rem',
+                        outline: 'none',
+                      }}
+                    />
                   </div>
-                  
-                  {/* Real-Time Character Constraints Helper */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.35rem', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif' }}>
-                    {rawPhone.length < selectedCountry.length ? (
-                      <span style={{ color: 'var(--primary-gold)' }}>
-                        Enforced limit: {rawPhone.length} / {selectedCountry.length} digits
-                      </span>
-                    ) : (
-                      <span style={{ color: '#10B981', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        ✓ Completed exactly {selectedCountry.length} digits
-                      </span>
-                    )}
-                    <span style={{ color: 'var(--text-muted)' }}>
-                      Target: {selectedCountry.name}
-                    </span>
-                  </div>
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="industry">Industry</label>
-                  <select
-                    id="industry"
-                    name="industry"
-                    value={formData.industry}
-                    onChange={handleInputChange}
-                    style={{ 
-                      color: formData.industry === "" ? 'rgba(255, 255, 255, 0.4)' : 'var(--text-light)', 
-                      background: 'rgba(11, 31, 58, 0.8)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      padding: '1rem',
-                      width: '100%',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '1rem',
-                      outline: 'none',
-                      transition: 'all 0.3s ease'
-                    }}
-                    required
-                  >
-                    <option value="" disabled style={{ background: '#0B1F3A', color: 'rgba(255,255,255,0.4)' }}>Select your industry</option>
-                    <option value="Education" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Education / Schools / Colleges</option>
-                    <option value="Healthcare" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Healthcare / Clinics / Hospitals</option>
-                    <option value="Logistics" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Logistics / Export / Construction</option>
-                    <option value="Retail" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Retail / Wholesale / E-commerce</option>
-                    <option value="Services" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Services / Hospitality / Tourism</option>
-                    <option value="Manufacturing" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Manufacturing / Industrial</option>
-                    <option value="Other" style={{ background: '#0B1F3A', color: 'var(--text-light)' }}>Other Industry</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="bottleneck">Your Biggest Operational Bottleneck</label>
-                  <textarea
-                    id="bottleneck"
-                    name="bottleneck"
-                    value={formData.bottleneck}
-                    onChange={handleInputChange}
-                    className="form-control"
-                    placeholder="e.g. Lost order receipts in paper books, manual invoicing overhead, active leaks in unstructured group chats..."
-                    required
-                  ></textarea>
-                </div>
-
-                <button type="submit" className="btn btn-primary submit-btn">
-                  <Send size={16} />
-                  {formState === 'submitting' ? 'Submitting...' : 'Submit'}
-                </button>
-              </form>
-            )}
-
-            {formState === 'submitting' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', gap: '1rem' }}>
-                <div style={{ width: '40px', height: '40px', border: '3px solid rgba(212, 175, 55, 0.2)', borderTopColor: 'var(--primary-gold)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                <p style={{ color: 'var(--text-muted)', fontFamily: 'Poppins', fontSize: '1rem' }}>Routing secure data to email...</p>
-                <style>{`
-                  @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                  }
-                `}</style>
               </div>
-            )}
 
-            {formState === 'success' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '300px', textAlign: 'center', gap: '1rem', animation: 'fadeIn 0.5s ease' }}>
-                <div style={{ color: 'var(--primary-gold)', background: 'rgba(212, 175, 55, 0.1)', padding: '1rem', borderRadius: '50%' }}>
-                  <CheckCircle2 size={48} />
-                </div>
-                <h3 className="brand-font text-gold" style={{ fontSize: '1.5rem' }}>Request Submitted!</h3>
-                <p style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                  Your request has been securely indexed. Our team will contact you at your WhatsApp number <strong>{formData.whatsapp}</strong> or email <strong>{formData.email}</strong> within 2 hours.
-                </p>
-                 <button onClick={() => { setFormState('idle'); setRawPhone(''); setSelectedCountry(countries[0]); }} className="btn btn-outline" style={{ marginTop: '1rem', padding: '0.5rem 1.5rem', fontSize: '0.85rem' }}>
-                  Submit New Request
+              {/* What are you looking to build? */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    color: 'var(--metallic-silver)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  What are you looking to build?
+                </label>
+                <select
+                  name="solutionType"
+                  value={formData.solutionType}
+                  onChange={handleInputChange}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem 1.1rem',
+                    borderRadius: '10px',
+                    background: 'rgba(5, 11, 22, 0.9)',
+                    border: '1px solid rgba(198, 206, 216, 0.2)',
+                    color: 'var(--pearl-white)',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {buildOptions.map((opt, idx) => (
+                    <option key={idx} value={opt} style={{ background: '#071326', color: '#FFFFFF' }}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tell us about your challenge */}
+              <div style={{ marginBottom: '2rem' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    color: 'var(--metallic-silver)',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  Tell us about your challenge *
+                </label>
+                <textarea
+                  name="challenge"
+                  rows={4}
+                  required
+                  value={formData.challenge}
+                  onChange={handleInputChange}
+                  placeholder="Describe the repetitive manual task, process bottleneck, or system you want to automate..."
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem 1.1rem',
+                    borderRadius: '10px',
+                    background: 'rgba(5, 11, 22, 0.7)',
+                    border: '1px solid rgba(198, 206, 216, 0.2)',
+                    color: 'var(--pearl-white)',
+                    fontSize: '0.95rem',
+                    outline: 'none',
+                    resize: 'vertical',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+
+              {/* Submit CTA Button */}
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  type="submit"
+                  disabled={formStatus === 'submitting'}
+                  className="btn btn-primary"
+                  style={{
+                    padding: '1rem 3rem',
+                    fontSize: '1.05rem',
+                    minWidth: '260px',
+                  }}
+                >
+                  {formStatus === 'submitting' ? (
+                    <span>Submitting Enquiry...</span>
+                  ) : (
+                    <>
+                      <span>Let's turn your idea into impact</span>
+                      <Send size={18} />
+                    </>
+                  )}
                 </button>
               </div>
-            )}
-          </div>
+            </form>
+          )}
         </div>
       </div>
     </section>

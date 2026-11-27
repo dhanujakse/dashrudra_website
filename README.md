@@ -1,18 +1,23 @@
-# React + Vite
+# DASHRUDRA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **STRATEGY. INSIGHT. IMPACT.**
 
-Currently, two official plugins are available:
+### Purpose
+To make life easier, businesses more efficient and technology more meaningful.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+We build AI-powered solutions, automate repetitive workflows and develop technology that makes businesses work smarter.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Core Pillars
+1. **Artificial Intelligence**: Intelligent solutions that help businesses understand information, simplify decisions and improve everyday operations.
+2. **Intelligent Automation**: Automating repetitive workflows, connecting business processes and reducing unnecessary manual effort.
+3. **Custom Technology Solutions**: Designing and developing software tailored to real business requirements.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-"# dashrudra_website" 
-"# dashrudraa" 
+### Key Tech Stack
+- **Framework**: React 19 + Vite
+- **3D Cinematic Engine**: Three.js (Procedural 3D Earth horizon with atmospheric scattering, faceted metallic 3D compass-star, and flowing silver-blue spline curves)
+- **Styling**: Modern CSS design system with Midnight Navy & Metallic Silver brand palette
+- **Deployment**: Vercel Serverless Function (`/api/send-email`) + FormSubmit Fallback

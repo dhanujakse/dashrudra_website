@@ -32,31 +32,31 @@ export default async function handler(req, res) {
     const mailToOwner = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
-      subject: `New Demo Request from ${name} (${institution})`,
+      subject: `New Enquiry from ${name} (${institution || 'Business'})`,
       html: `
-        <h3>New Demo Consultation Request</h3>
+        <h3>New Enquiry on DASHRUDRA</h3>
         <p><strong>Name:</strong> ${name}</p>
         <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Mobile:</strong> ${mobile}</p>
-        <p><strong>Institution:</strong> ${institution}</p>
-        <p><strong>Message:</strong> ${message}</p>
+        <p><strong>Mobile/WhatsApp:</strong> ${mobile || 'N/A'}</p>
+        <p><strong>Business / Organization:</strong> ${institution || 'N/A'}</p>
+        <p><strong>Message / Challenge:</strong> ${message}</p>
       `,
     };
 
     const mailToClient = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Your Consultation Request with DashRudhra",
+      subject: "Thank you for contacting DASHRUDRA",
       html: `
-        <div style="font-family: Arial, sans-serif; color: #0B1F3A;">
-          <h2>Thank You for Contacting DashRudhra!</h2>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #071326; max-width: 600px; line-height: 1.6;">
+          <h2 style="color: #10264A; margin-bottom: 8px;">Thank You for Connecting with DASHRUDRA</h2>
+          <p style="color: #245B9E; font-size: 13px; letter-spacing: 1.5px; margin-top: 0; text-transform: uppercase;">Strategy. Insight. Impact.</p>
           <p>Dear ${name},</p>
-          <p>We have successfully received your request for a digital consultation. Our specialized engineering team is currently reviewing your institution's specific requirements.</p>
-          <p>We will contact you shortly at <strong>${mobile}</strong> or via email to schedule your personalized live demo of the Hall Arrangement System and other digital solutions.</p>
+          <p>We have received your enquiry. Our team is reviewing your requirements to explore how we can simplify your operations, automate repetitive workflows, and build practical solutions tailored to your business.</p>
+          <p>We will be in touch with you shortly at <strong>${mobile || email}</strong>.</p>
           <br/>
-          <p>We look forward to streamlining operations at <strong>${institution}</strong>.</p>
-          <p>Best Regards,</p>
-          <p><strong>The DashRudhra Team</strong></p>
+          <p>Best regards,</p>
+          <p><strong>DASHRUDRA Team</strong><br/><span style="color: #8293AA; font-size: 13px;">Less Repetition. More Possibilities.</span></p>
         </div>
       `,
     };
